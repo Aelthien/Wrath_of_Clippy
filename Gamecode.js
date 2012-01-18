@@ -7,6 +7,7 @@ var exit;
 var currentLives;
 var foxHor = 3;
 var foxVert = 560;
+var timer;
 
 
 function init(){
@@ -31,7 +32,7 @@ function keyListener(e){
 		foxHor += 10;
 		fox.style.left = foxHor + 'px';
 	}
-	if(e.keyCode==87 && foxVert > 0){
+	if(e.keyCode==87 && foxVert > 25){
 		foxVert -= 10;
 		fox.style.top = foxVert + 'px';
 	}
@@ -45,7 +46,7 @@ function start(){
 	render();
 	difficulty();
 	
-	if(ballTop < 470){
+	if(lives > 0 ){
 		timer = setTimeout('start()',50);
 	}
 	else{
