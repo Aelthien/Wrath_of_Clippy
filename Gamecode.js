@@ -1,35 +1,9 @@
 var s = {};
-function resetState(){
-	var x = 3; //Player x position
-	var y = 500; //Player y position
-	var hillsCloseX = -100;
-	var cX = 0; //Clippy x position
-	var cY = 20; //Clippy y position
-	var cH = 127; //Clippy height
-	var cW = 50; //Clippy width
-	var aX = 810; //Arrow x position
-	var aY = 500; //Arrow y position
-	var bX = 810; //Ball x potition
-	var bY = 560; //Ball y position
-	var c1X = -100;
-	var c2X = 350;
-	var tick = 0;
-	var clippyLife = 1;
-	var jumpedAt = 0;
-	var jumpLength = 30; //The length of a jump in ticks
-	var isJumping = false; //If the player is jumping
-	var clippyDir = false; //Clippy's direction of movement false = right
-	var isShooting = false; //If the player is shooting
-	var movingRight = false; //If the player is moving right
-	var movingLeft = false; //If the player is moving left
-	var bombDrop = false;
-}
-//positions
-
+var timer;
 
 //boundaries
 var leftEdge = 3; //Left boundary of the game area
-var rightEdge = 772; //Right boundary of the game area
+var rightEdge = 775; //Right boundary of the game area
 var topEdge = 26; //Top boundary of the game area
 var bottomEdge = 590; //Bottom boundary of the game
 
@@ -37,23 +11,51 @@ var bottomEdge = 590; //Bottom boundary of the game
 var gravity = 3; //How many pixels the player moves with gravity
 var jump = 3; //How many pixels something moves per tick when jumping
 var move = 3; //Player move Left(-) Right(+)
-var cMove = 3; //Clippy move Left(-) Right(+) Must be an odd number
-
-//time
-
 
 //boolean
 
+function resetState(){
+	s.x = 3; //Player x position
+	fox.style.top = s.y;
+	s.y = 500; //Player y position
+	fox.style.left = s.x;
+	s.hillsCloseX = 0;
+	hillsClose.style.left = s.hillsCloseX;
+	s.cX = 0; //Clippy x position
+	s.cY = 20; //Clippy y position
+	s.cH = 127; //Clippy height
+	s.cW = 50; //Clippy width
+	s.aX = 810; //Arrow x position
+	s.aY = 500; //Arrow y position
+	s.bX = 810; //Ball x position
+	s.bY = 560; //Ball y position
+	s.c1X = -100;
+	s.c2X = 350;
+	s.tick = 0;
+	s.clippyLife = 1;
+	s.jumpedAt = 0;
+	s.jumpLength = 30; //The length of a jump in ticks
+	s.bLandedAt = 0;
+	s.bTimerLength = 30;
+	s.isJumping = false; //If the player is jumping
+	s.clippyDir = false; //Clippy's direction of movement false = right
+	s.isShooting = false; //If the player is shooting
+	s.movingRight = false; //If the player is moving right
+	s.movingLeft = false; //If the player is moving left
+	s.bombDrop = false;
+	s.bLanded = false;
+}
 
 function init(){
+	clearTimeout(timer);
 	d = document;
 	d.onkeydown = keyDown;
 	d.onkeyup = keyUp;
-	hills_close = d.getElementById('hills_close');
+	s.bLandedAt = s.tick;
+	hillsClose = d.getElementById('hills_close');
 	gameArea = d.getElementById('gameArea');
 	startScreen = d.getElementById('startScreen');
 	startButton = d.getElementById('startButton');
-	gameArea.style.visibility = 'hidden';
 	fox = d.getElementById('fox');
 	hp = d.getElementById('hp');
 	arrow = d.getElementById('arrow');
@@ -65,84 +67,84 @@ function init(){
 	cloud2 = d.getElementById('cloud2');
 	arrow.style.visibility = 'hidden';
 	bomb.style.visibility = 'hidden';
+	startScreen.style.visibility = 'visible';
+	gameArea.style.visibility = 'hidden';
 	//if(start is clicked){show gameArea and call loop function};
 	$("#startButton").click(function(){
 		startScreen.style.visibility = 'hidden';
 		gameArea.style.visibility = 'visible';
+		resetState();
 		loop();
 	});
-}
-
-function reset(){
-	alert('reset');
 }
 
 function keyDown(evt){
 	k = evt.keyCode;
 	//move right
 	if(k===68){
-		if(x < rightEdge){
-			movingRight = true;
+		if(s.x < rightEdge){
+			s.movingRight = true;
 		}
 	}
 	//move left
 	if(k===65){
-		if(x > leftEdge){
-			movingLeft = true;
+		if(s.x > leftEdge){
+			s.movingLeft = true;
 		}
 	}
 	//jump
 	if(k===32){
 		if(!inAir()){
-			isJumping = true;
-			jumpedAt = tick;
+			s.isJumping = true;
+			s.jumpedAt = s.tick;
 		}
 	}
 	if(k===66){
-		if(bombDrop===false){
-			bombDrop = true;
-			bY = cY + cH;
-			bX = cX + 25;
-			bomb.style.top = bY;
-			bomb.style.left = bX;
+		if((s.bombDrop===false) && (s.bY <= bottomEdge - 6)){
+			s.bombDrop = true;
+			s.bY = s.cY + s.cH;
+			s.bX = s.cX + 25;
+			bomb.style.top = s.bY;
+			bomb.style.left = s.bX;
 			bomb.style.visibility = 'visible';
 		}
 	}
 	if(k===90){
-		if(isShooting === false){
-			isShooting = true;
-			aY = y - 20;
-			aX = x + 8;
-			arrow.style.top = aY;
-			arrow.style.left = aX;
+		if(s.isShooting === false){
+			s.isShooting = true;
+			s.aY = s.y - 20;
+			s.aX = s.x + 8;
+			arrow.style.top = s.aY;
+			arrow.style.left = s.aX;
 			arrow.style.visibility = 'visible';
-		}		
-	}
+		}
+	}		
 }
+
 
 function keyUp(evt){
 	k = evt.keyCode;
 	if(k===68){
-		movingRight = false;
+		s.movingRight = false;
 	}
 	if(k===65){
-		movingLeft = false;
+		s.movingLeft = false;
 	}
 }
 
 function inAir(){
-	return(y <= bottomEdge - 33);
+	return(s.y <= bottomEdge - 33);
 }
 
 function detectCollision(){ // check collision
-	var cLeft = cX; //left edge of Clippy
-	var cRight = cX + cW; //right edge of Clippy
-	var cTop = cY; //top edge of Clippy
-	var cBottom = cY + cH; //bottom edge of Clippy
-	//if arrow x is > cLeft and < cRight
-	if((aX > cLeft) && (aX < cRight)){
+	var cLeft = s.cX; //left edge of Clippy
+	var cRight = s.cX + s.cW; //right edge of Clippy
+	var cTop = s.cY; //top edge of Clippy
+	var cBottom = s.cY + s.cH; //bottom edge of Clippy
+	//if arrow s.x is > cLeft and < cRight
+	if((s.aX > cLeft) && (s.aX < cRight)){
 		//AND if arrow y is < cBottom and > cTop
-		if((aY > cTop) && (aY < cBottom)){
+		if((s.aY > cTop) && (s.aY < cBottom)){
 			return true;
 		}
 	}
@@ -151,111 +153,125 @@ function detectCollision(){ // check collision
 
 function gameEnd()	{
 	clearTimeout(timer);
-	reset();
+	resetState();
 }
 
 function loop(){
-	debug = 'Cx:' + cX + ' Cy:' + cY + ' Bx:' + bX + ' By:' + bY;
+	debug = 'Cx:' + s.cX + ' Cy:' + s.cY + ' Bx:' + s.bX + ' By:' + s.bY + ' move:' + move + ' tick:' + s.tick;
+	debug += 'x: ' + s.x + ' hills:' + s.hillsCloseX + ' jA:' + s.jumpedAt + ' bLA:' + s.bLandedAt;
 	position.innerHTML = debug;
-	tick += 1;
-	c1X += 1;
-	cloud1.style.left = c1X + 'px';
-	c2X += 1;
-	cloud2.style.left = c2X + 'px';
-	if(c1X >= 800){
-		c1X = -100;
-		cloud1.style.left = c1X;
-	}
-	if(c2X >= 800){
-		c2X = -200;
-		cloud2.style.left = c2X;
-	}
-	setTimeout(function(){
+	timer = setTimeout(function(){
+		s.tick += 1;
+		s.c1X += 1;
+		cloud1.style.left = s.c1X + 'px';
+		s.c2X += 1;
+		cloud2.style.left = s.c2X + 'px';
+		if(s.c1X >= 800){
+			s.c1X = -100;
+			cloud1.style.left = s.c1X;
+		}
+		if(s.c2X >= 800){
+			s.c2X = -200;
+			cloud2.style.left = s.c2X;
+		}
 		if(detectCollision()){
-			isShooting = false;
-			aY = 500;
-			aX = 810;
-			arrow.style.top = aY;
-			arrow.style.left = aX;
+			s.isShooting = false;
+			s.aY = 500;
+			s.aX = 810;
+			arrow.style.top = s.aY;
+			arrow.style.left = s.aX;
 			arrow.style.visibility = 'hidden';
-			clippyLife -= 1;
+			s.clippyLife -= 1;
 		}
-		if(clippyLife === 0){
-			//end the game
+		if(s.clippyLife === 0){
 			gameEnd();
+			resetState();
 		}
-	//if jumping move up
-		if(isJumping === true){
-			y -= jump;
-			fox.style.top = y + 'px';
-			jumpPos = tick - jumpedAt;
-				if(jumpPos >= jumpLength){
-					isJumping = false;
+		//if jumping move up
+		if(s.isJumping === true){
+			s.y -= jump;
+			fox.style.top = s.y + 'px';
+			jumpPos = s.tick - s.jumpedAt;
+				if(jumpPos >= s.jumpLength){
+					s.isJumping = false;
 				}
 		}
 		//if not jumping is he touching the ground? if he is not, fall.
-		if(isJumping === false){
+		if(s.isJumping === false){
 			if(inAir()){
-				y += gravity;
-				fox.style.top = y + 'px';
+				s.y += gravity;
+				fox.style.top = s.y + 'px';
 			}
 		}
-		if(clippyDir === false){
-			cX += cMove;
-			clippy.style.left = cX + 'px';
-				if(cX === rightEdge - 22){
-					clippyDir = true;
+		if(s.clippyDir === false){
+			s.cX += move;
+			clippy.style.left = s.cX + 'px';
+				if(s.cX >= rightEdge - 22){
+					s.clippyDir = true;
 				}
 		}
-		if(clippyDir === true){
-			cX -= cMove;
-			clippy.style.left = cX + 'px';
-				if(cX === leftEdge){
-					clippyDir = false;
+		if(s.clippyDir === true){
+			s.cX -= move;
+			clippy.style.left = s.cX + 'px';
+				if(s.cX <= leftEdge){
+					s.clippyDir = false;
 				}
 		}
-		if(isShooting === true){
-			aY -= 10;
-			arrow.style.top = aY + 'px';
-				if(aY <= 0){
-					isShooting = false;
-					aY = 540;
-					aX = 810;
-					arrow.style.top = aY;
-					arrow.style.left = aX;
+		if(s.isShooting === true){
+			s.aY -= 10;
+			arrow.style.top = s.aY + 'px';
+				if(s.aY <= 0){
+					s.isShooting = false;
+					s.aY = 540;
+					s.aX = 810;
+					arrow.style.top = s.aY;
+					arrow.style.left = s.aX;
 					arrow.style.visibility = 'hidden';
 				}
 		}
-		if(movingRight===true){
-			if(x < rightEdge){
-				x += move;
-				fox.style.left = x + 'px';
-				hillsCloseX -= 1;
-				hills_close.style.left = hillsCloseX + 'px';
-				c1X -= move;
-				cloud1.style.left = c1X + 'px';
-				c2X -= move;
-				cloud2.style.left = c2X + 'px';
+		if(s.movingRight===true){
+			if(s.x < rightEdge){
+				s.x += move;
+				fox.style.left = s.x + 'px';
+				s.hillsCloseX -= 1;
+				hills_close.style.left = s.hillsCloseX + 'px';
+				s.c1X -= move;
+				cloud1.style.left = s.c1X + 'px';
+				s.c2X -= move;
+				cloud2.style.left = s.c2X + 'px';
 			}
 		}
-		if(movingLeft===true){
-			if(x > leftEdge){
-				x -= move;
-				fox.style.left = x + 'px';
-				hillsCloseX += 1;
-				hills_close.style.left = hillsCloseX + 'px';
-				c1X += move;
-				cloud1.style.left = c1X + 'px';
-				c2X += move;
-				cloud2.style.left = c2X + 'px';
+		if(s.movingLeft===true){
+			if(s.x > leftEdge){
+				s.x -= move;
+				fox.style.left = s.x + 'px';
+				s.hillsCloseX += 1;
+				hills_close.style.left = s.hillsCloseX + 'px';
+				s.c1X += move;
+				cloud1.style.left = s.c1X + 'px';
+				s.c2X += move;
+				cloud2.style.left = s.c2X + 'px';
 			}
 		}
-		if((bombDrop===true) && (bY < bottomEdge - 6)){
-			bY += 5;
-			bomb.style.top = bY + 'px';
-				if(bY >= bottomEdge - 6){
-					//start timed explosion
+		if((s.bombDrop===true) && (s.bY <= bottomEdge - 6)){
+			s.bY += 5;
+			bomb.style.top = s.bY + 'px';
+			//if(bomb lands on bottomEdge){start timing};
+			if(s.bY >= bottomEdge - 3){
+				s.bLanded = true;
+				if(s.bLanded===true){
+					//bPos = current tick - the tick # that the bomb landed
+					bPos = s.tick - s.bLandedAt;
+					//if(bPos >= length of bomb timer){explode}
+					if(bPos >= s.bTimerLength){
+						s.bombDrop = false;
+						s.bX = 810;
+						bomb.style.left = s.bX;
+						s.bY = 500;
+						bomb.style.top = s.bY;
+					}
 				}
+			}
 		}
 		
 		loop();
